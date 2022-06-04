@@ -115,6 +115,6 @@ scipy.io.savemat('res_from_python.mat',{'phrases':phrases,'lemmas':lemmas,'meta_
 
 
 
-# for count,phrase in enumerate(phrases):
-#     print(tabulate([[phrase,lemmas[count],meta_datas[count],POS[count]]]))
+for count,phrase in enumerate(phrases):
+    print(tabulate([[phrase,lemmas[count],meta_datas[count],POS[count]]]))
 

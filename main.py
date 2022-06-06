@@ -111,5 +111,5 @@ app = FastAPI()
 async def readitem(text: str):
     doc = nlp(text)
     [phrases,lemmas,meta_datas,POS] = parse_doc(doc)
-    POS_string = ','.join(map(str, POS))
+    POS_string = ';'.join(map(str, POS))
     return {"result": POS_string}

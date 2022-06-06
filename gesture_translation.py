@@ -111,10 +111,10 @@ def parse_doc(doc):
 
 doc = nlp("You eat there")
 [phrases,lemmas,meta_datas,POS] = parse_doc(doc)
-scipy.io.savemat('res_from_python.mat',{'phrases':phrases,'lemmas':lemmas,'meta_datas':meta_datas,'POS':POS})
-
-
-
 for count,phrase in enumerate(phrases):
     print(tabulate([[phrase,lemmas[count],meta_datas[count],POS[count]]]))
+
+# scipy.io.savemat('res_from_python.mat',{'phrases':phrases,'lemmas':lemmas,'meta_datas':meta_datas,'POS':POS})
+
+
 

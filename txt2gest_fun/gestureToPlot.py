@@ -12,6 +12,7 @@ def gestureToPlot(gesture):
     fig, ax = plt.subplots()
     ax.add_collection(lines)
     plt.axis([1,9,1,21])
+    plt.grid()
     plt.gca().invert_yaxis()
     plt.gca().set_aspect('equal')
     plt.savefig('plot.png', bbox_inches='tight')

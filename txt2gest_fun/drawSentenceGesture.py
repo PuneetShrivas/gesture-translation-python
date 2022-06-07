@@ -108,6 +108,7 @@ def drawSentenceGesture(lemmas,phrases,meta_datas,POS):
         
         constituents[i]['pressure_variation'] = np.ones(len(constituents[i]['X_positions']), dtype = int).tolist()
         constituents[i]['pressure_variation'][-1]=0
+        constituents[i]['pressure_variation']=[x*3+1 for x in constituents[i]['pressure_variation']]
 
         # Add consitituent to overall gesture
         gesture_X_positions=gesture_X_positions+constituents[i]['X_positions']

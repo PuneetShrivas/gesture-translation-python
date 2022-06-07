@@ -91,16 +91,20 @@ def drawSentenceGesture(lemmas,phrases,meta_datas,POS):
             if prop_dir==7 or prop_dir==3:
                 constituents[i]['Y_positions'].append(constituents[i]['Y_positions'][-1])
         
-        if i>=2:
+        if i>=1:
             if(constituents[i]['X_constrained']==0):
                 X_shift=0
+                print(constituents[i-1]['X_positions'][-1])
+                print(constituents[i]['X_positions'][0])
                 if(constituents[i-1]['X_positions'][-1]<=constituents[i]['X_positions'][0]):
                     shifts=[constituents[i-1]['X_positions'][-1]-constituents[i]['X_positions'][0],1-min(constituents[i]['X_positions'])]
                     X_shift=max(shifts)
                 elif(constituents[i-1]['X_positions'][-1]>constituents[i]['X_positions'][0]):
                     shifts=[constituents[i-1]['X_positions'][-1]-constituents[i]['X_positions'][0],9-max(constituents[i]['X_positions'])]
                     X_shift=min(shifts)
+                print(constituents[i]['X_positions'])
                 constituents[i]['X_positions']=[k + X_shift for k in constituents[i]['X_positions']]
+                print(constituents[i]['X_positions'])
         
         constituents[i]['pressure_variation'] = np.ones(len(constituents[i]['X_positions']), dtype = int).tolist()
         constituents[i]['pressure_variation'][-1]=0

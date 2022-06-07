@@ -1,4 +1,5 @@
 from txt2gest_fun.drawSentenceGesture import drawSentenceGesture
+from txt2gest_fun.gestureToPlot import gestureToPlot
 from nltk import Tree
 from tabulate import tabulate
 import spacy
@@ -106,3 +107,5 @@ doc = nlp("You eat there")
 # gesture=drawSenteceGesture(phrases,lemmas,meta_datas,POS)
 gesture=drawSentenceGesture(phrases,lemmas,meta_datas,POS)
 print(gesture)
+gestureToPlot(gesture)
+

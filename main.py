@@ -1,7 +1,11 @@
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from txt2gest_fun.drawSentenceGesture import drawSentenceGesture
+from txt2gest_fun.gestureToPlot import gestureToPlot
 from nltk import Tree
 from tabulate import tabulate
 import spacy
+import os
 nlp = spacy.load("en_core_web_lg")
 features = [
     "PronType",
@@ -111,5 +115,7 @@ app = FastAPI()
 async def readitem(text: str):
     doc = nlp(text)
     [phrases,lemmas,meta_datas,POS] = parse_doc(doc)
-    POS_string = '-->'.join(map(str, POS))
-    return {"result": POS_string}
+    gesture=drawSentenceGesture(phrases,lemmas,meta_datas,POS)
+    gestureToPlot(gesture)  
+    # POS_string = '-->'.join(map(str, POS))
+    return FileResponse('plot.png')

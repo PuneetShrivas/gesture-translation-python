@@ -1,4 +1,3 @@
-from importlib.metadata import metadata
 from .lookupSeq.lookupSeqFromLemma import lookupSeqFromLemma
 import math
 import numpy as np

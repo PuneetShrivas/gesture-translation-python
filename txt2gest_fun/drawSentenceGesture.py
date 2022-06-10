@@ -1,3 +1,4 @@
+from audioop import reverse
 from .lookupSeq.lookupSeqFromLemma import lookupSeqFromLemma
 import math
 import numpy as np
@@ -14,7 +15,9 @@ def drawSentenceGesture(lemmas,phrases,meta_datas,POS):
 
     gesture=[]
     constituents=[]
-    for i in range(0,len(lemmas)):
+    i=0
+    skips=0
+    while i < len(lemmas)-skips:
         print("---")
         constituents.append({'X_positions':[],'Y_positions':[],'dir_sequence':[],'X_constrained':0,'Y_constrained':0,'pressure_variation':[]})
 
@@ -22,7 +25,14 @@ def drawSentenceGesture(lemmas,phrases,meta_datas,POS):
         X_origin_constituent=5
         Y_origin_constituent=1+(i)*7
         [seq,X_size,Y_size]=lookupSeqFromLemma(phrases[i])
-        print(lemmas[i],X_size,Y_size,seq)
+        # if seq=='':
+        #     del lemmas[i]
+        #     del phrases[i]
+        #     del meta_datas[i]
+        #     del POS[i]
+        #     i=i-1
+        #     continue
+        print(lemmas[i])
         X_origin_constituent=5-math.floor(X_size/2)
         Y_origin_constituent=4+(i)*7-math.floor(Y_size/2)
         #Generate gesture from dir sequence     
@@ -39,7 +49,7 @@ def drawSentenceGesture(lemmas,phrases,meta_datas,POS):
             constituents[i]['dir_sequence'].append(shifted_dirs[0])
             start_dir=shifted_dirs[0]
 
-        # Add grammatization
+        # Add grammatizations
         if(POS[i]=='Verb'):
             print('is verb')
             if 'Tense' in meta_datas[i] and (meta_datas[i]['Tense'][0]=='Pres'):
@@ -48,6 +58,37 @@ def drawSentenceGesture(lemmas,phrases,meta_datas,POS):
             elif 'Tense' in meta_datas[i] and (meta_datas[i]['Tense'][0]=='Past'):
                 print('and is past tense')
                 constituents[i]['dir_sequence']=[6,6]+constituents[i]['dir_sequence']
+            elif 'Tense' in meta_datas[i] and (meta_datas[i]['Tense'][0]=='Fut'):
+                print('and is future tense')
+                constituents[i]['dir_sequence']=[4,4]+constituents[i]['dir_sequence']
+            elif 'Tense' not in meta_datas[i]:
+                print('and is present tense')
+                print("meta datas: ",meta_datas[i])
+                constituents[i]['dir_sequence']=[5,5]+constituents[i]['dir_sequence']
+            if 'Aspect' in meta_datas[i] and (meta_datas[i]['Aspect'][0]=='Prog'):
+                print('and is continous tense')
+                constituents[i]['dir_sequence']=constituents[i]['dir_sequence']+[5,4]
+            elif 'Aspect' in meta_datas[i] and (meta_datas[i]['Aspect'][0]=='Perf'):
+                print('and is Perf tense')
+                constituents[i]['dir_sequence']=constituents[i]['dir_sequence']+[5,6]
+    
+        if(POS[i]=='Question_Words'):
+            print('is question word')
+        if(POS[i]=='Modal'):
+            print('is modal')
+            if(lemmas[i].lower()=='will'):
+                for j in range(i+1,len(lemmas)):
+                    meta_datas[j]={**meta_datas[j],'Tense':['Fut']}
+            
+            #
+            for k in range(i+1,len(lemmas)):
+                lemmas[k-1]=lemmas[k]
+                phrases[k-1]=phrases[k]
+                POS[k-1]=POS[k]
+                meta_datas[k-1]=meta_datas[k]
+            skips=skips+1
+            continue
+
         if(POS[i]=='Noun'):
             print('is noun')
         if(POS[i]=='Adverb'):
@@ -73,6 +114,11 @@ def drawSentenceGesture(lemmas,phrases,meta_datas,POS):
                 constituents[i]['X_constrained']=1
                 X_origin_constituent=9
 
+        if(POS[i]=='Punctuation'):
+            print('is pronoun')
+            if phrases[i]=='.':
+                pass
+
         # Generate constituent gesture
         constituents[i]['X_positions'].append(X_origin_constituent)
         constituents[i]['Y_positions'].append(Y_origin_constituent)
@@ -91,21 +137,29 @@ def drawSentenceGesture(lemmas,phrases,meta_datas,POS):
             if prop_dir==7 or prop_dir==3:
                 constituents[i]['Y_positions'].append(constituents[i]['Y_positions'][-1])
         
+        # Realign constituents going top to down
         if i>=1:
             if(constituents[i]['X_constrained']==0):
                 X_shift=0
-                print(constituents[i-1]['X_positions'][-1])
-                print(constituents[i]['X_positions'][0])
                 if(constituents[i-1]['X_positions'][-1]<=constituents[i]['X_positions'][0]):
                     shifts=[constituents[i-1]['X_positions'][-1]-constituents[i]['X_positions'][0],1-min(constituents[i]['X_positions'])]
                     X_shift=max(shifts)
                 elif(constituents[i-1]['X_positions'][-1]>constituents[i]['X_positions'][0]):
                     shifts=[constituents[i-1]['X_positions'][-1]-constituents[i]['X_positions'][0],9-max(constituents[i]['X_positions'])]
                     X_shift=min(shifts)
-                print(constituents[i]['X_positions'])
                 constituents[i]['X_positions']=[k + X_shift for k in constituents[i]['X_positions']]
-                print(constituents[i]['X_positions'])
         
+
+        # Fix vertical alignment
+        Y_shift=0
+        Y_half_size=math.floor((max(constituents[i]['Y_positions'])-min(constituents[i]['Y_positions'])+1)/2)
+        Y_half_position=max(constituents[i]['Y_positions'])-Y_half_size
+        Y_shift=3 + i*7 - Y_half_position
+        constituents[i]['Y_positions']=[k + Y_shift for k in constituents[i]['Y_positions']]
+
+        # Fill gaps values TODO
+
+        # Add pressure variation
         constituents[i]['pressure_variation'] = np.ones(len(constituents[i]['X_positions']), dtype = int).tolist()
         constituents[i]['pressure_variation'][-1]=0
         constituents[i]['pressure_variation']=[x*2+1 for x in constituents[i]['pressure_variation']]
@@ -115,6 +169,8 @@ def drawSentenceGesture(lemmas,phrases,meta_datas,POS):
         gesture_Y_positions=gesture_Y_positions+constituents[i]['Y_positions']
         gesture_dir_sequence=gesture_dir_sequence+constituents[i]['dir_sequence']
         gesture_pressure_variation=gesture_pressure_variation+constituents[i]['pressure_variation']
+
+        i=i+1
 
     gesture={'X_positions':gesture_X_positions,'Y_positions':gesture_Y_positions,'dir_sequence':gesture_dir_sequence,'pressure_variation':gesture_pressure_variation,'angular_vel':0,'data_density':0}
     return gesture

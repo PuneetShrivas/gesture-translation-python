@@ -1,9 +1,7 @@
-from txt2gest_fun.drawSentenceGesture import drawSentenceGesture
-from txt2gest_fun.gestureToPlot import gestureToPlot
 from nltk import Tree
 from tabulate import tabulate
 import spacy
-nlp = spacy.load("en_core_web_sm")
+nlp = spacy.load("en_core_web_lg")
 features = [
     "PronType",
     "Gender",
@@ -43,26 +41,39 @@ pronouns = [
     "PRP$"
 ]
 adverbs = [
-'RB',
-'RBR',
-'RBS'
+    'RB',
+    'RBR',
+    'RBS'
 ]
-adjectives =[
-'JJ',
-'JJR',
-'JJS',
+adjectives = [
+    'JJ',
+    'JJR',
+    'JJS',
 ]
-auxiliaries_deps=[
-'AUX',
-'AUXPASS',
-'CCONJ',
-'TO',
+auxiliaries_deps = [
+    'AUX',
+    'AUXPASS',
+    'CCONJ',
+    'TO',
+]
+modals = [
+    'MD'
+]
+punctuations = [
+    'PUNCT'
+]
+question_words=[
+'WDT',
+'WP',
+'WP$',
+'WRB',
 ]
 
 def tok_format(tok):
     # if tok.tag_ in verb_forms:
-        # print("VERB : ", tok.orth_,"'s part is ", partForVerb(tok.orth_.lower()))
+    # print("VERB : ", tok.orth_,"'s part is ", partForVerb(tok.orth_.lower()))
     return "_".join([tok.orth_.upper(), tok.tag_, str(tok.morph)])
+
 
 def to_nltk_tree(node):
     if node.n_lefts + node.n_rights > 0:
@@ -70,15 +81,19 @@ def to_nltk_tree(node):
     else:
         return tok_format(node)
 
-def parse_doc(doc):
-    phrases=[]
+
+def parse_doc(text):
+    doc = nlp(text)
+    phrases = []
     meta_datas = []
     lemmas = []
     POS = []
-    for i,token in enumerate(doc):
+    for i, token in enumerate(doc):
         token_meta_data = {}
-        if token.pos_ in auxiliaries_deps or token.tag_ in auxiliaries_deps:
-            POS.append('Auxiliary')            
+        if token.tag_ in modals:
+            POS.append('Modal')
+        elif token.tag_ in question_words:
+            POS.append('Question_Words')
         elif token.tag_ in pronouns:
             POS.append('Pronoun')
         elif token.tag_ in nouns:
@@ -89,23 +104,17 @@ def parse_doc(doc):
             POS.append('Adverb')
         elif token.tag_ in adjectives:
             POS.append('Adjective')
-        else :
+        elif token.tag_ in punctuations:
+            POS.append('Punctuation')
+        elif token.pos_ in auxiliaries_deps or token.tag_ in auxiliaries_deps:
+            POS.append('Auxiliary')
+        else:
             POS.append('')
         for feature in features:
-            feature=feature.strip()
-            if len(token.morph.get(feature))>0:
-                token_meta_data.update({feature:token.morph.get(feature)})
+            feature = feature.strip()
+            if len(token.morph.get(feature)) > 0:
+                token_meta_data.update({feature: token.morph.get(feature)})
         phrases.append(token.text)
         meta_datas.append(token_meta_data)
         lemmas.append(token.lemma_)
-    return [phrases,lemmas,meta_datas,POS]
-
-doc = nlp("You are there")
-[phrases,lemmas,meta_datas,POS] = parse_doc(doc)
-
-
-# gesture=drawSenteceGesture(phrases,lemmas,meta_datas,POS)
-gesture=drawSentenceGesture(phrases,lemmas,meta_datas,POS)
-print(gesture)
-gestureToPlot(gesture)
-
+    return [phrases, lemmas, meta_datas, POS]

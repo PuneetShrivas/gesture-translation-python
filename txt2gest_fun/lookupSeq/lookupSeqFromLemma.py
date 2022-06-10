@@ -8,4 +8,4 @@ def lookupSeqFromLemma(lemma):
             X_size=int(row[3])
             Y_size=int(row[4])
             return[seq,X_size,Y_size]
-    return['',0,0]
+    return['S0E',0,0]

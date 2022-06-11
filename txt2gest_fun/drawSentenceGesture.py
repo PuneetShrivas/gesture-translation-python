@@ -19,6 +19,11 @@ def drawSentenceGesture(lemmas,phrases,meta_datas,POS):
     skips=0
     while i < len(lemmas)-skips:
         print("---")
+        print(i)
+        if i>2:
+            print('crossing 3 gestemes limit')
+
+        print(POS[i])
         constituents.append({'X_positions':[],'Y_positions':[],'dir_sequence':[],'X_constrained':0,'Y_constrained':0,'pressure_variation':[]})
 
         #Set origin for gesture
@@ -80,7 +85,7 @@ def drawSentenceGesture(lemmas,phrases,meta_datas,POS):
                 for j in range(i+1,len(lemmas)):
                     meta_datas[j]={**meta_datas[j],'Tense':['Fut']}
             
-            #
+            #fill empty space of modal
             for k in range(i+1,len(lemmas)):
                 lemmas[k-1]=lemmas[k]
                 phrases[k-1]=phrases[k]
@@ -115,9 +120,14 @@ def drawSentenceGesture(lemmas,phrases,meta_datas,POS):
                 X_origin_constituent=9
 
         if(POS[i]=='Punctuation'):
-            print('is pronoun')
+            print('is punctuation')
             if phrases[i]=='.':
                 pass
+                # gesture_X_positions.append(gesture_X_positions[-1])
+                # gesture_Y_positions.append(gesture_Y_positions[-1]+1)
+                # gesture_dir_sequence.append(5)
+                # gesture_pressure_variation.append(5)
+            
 
         # Generate constituent gesture
         constituents[i]['X_positions'].append(X_origin_constituent)
@@ -160,17 +170,22 @@ def drawSentenceGesture(lemmas,phrases,meta_datas,POS):
         # Fill gaps values TODO
 
         # Add pressure variation
-        constituents[i]['pressure_variation'] = np.ones(len(constituents[i]['X_positions']), dtype = int).tolist()
-        constituents[i]['pressure_variation'][-1]=0
-        constituents[i]['pressure_variation']=[x*2+1 for x in constituents[i]['pressure_variation']]
+        if (POS[i]!='Punctuation'):
+            constituents[i]['pressure_variation'] = np.ones(len(constituents[i]['X_positions']), dtype = int).tolist()
+            constituents[i]['pressure_variation'][-1]=0
+            constituents[i]['pressure_variation']=[x*2+1 for x in constituents[i]['pressure_variation']]
 
         # Add consitituent to overall gesture
         gesture_X_positions=gesture_X_positions+constituents[i]['X_positions']
         gesture_Y_positions=gesture_Y_positions+constituents[i]['Y_positions']
         gesture_dir_sequence=gesture_dir_sequence+constituents[i]['dir_sequence']
         gesture_pressure_variation=gesture_pressure_variation+constituents[i]['pressure_variation']
-
         i=i+1
 
+
+    print(gesture_pressure_variation)
+    print(gesture_X_positions)
+    print(gesture_Y_positions)
+    print(gesture_dir_sequence)
     gesture={'X_positions':gesture_X_positions,'Y_positions':gesture_Y_positions,'dir_sequence':gesture_dir_sequence,'pressure_variation':gesture_pressure_variation,'angular_vel':0,'data_density':0}
     return gesture

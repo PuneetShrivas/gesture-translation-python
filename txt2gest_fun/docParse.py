@@ -104,7 +104,7 @@ def parse_doc(text):
             POS.append('Adverb')
         elif token.tag_ in adjectives:
             POS.append('Adjective')
-        elif token.tag_ in punctuations:
+        elif token.pos_ in punctuations:
             POS.append('Punctuation')
         elif token.pos_ in auxiliaries_deps or token.tag_ in auxiliaries_deps:
             POS.append('Auxiliary')

@@ -2,18 +2,21 @@ from audioop import reverse
 from .lookupSeq.lookupSeqFromLemma import lookupSeqFromLemma
 import math
 import numpy as np
+
+
 def drawSentenceGesture(lemmas,phrases,meta_datas,POS):
 
-    # gesture['X_positions']=[]
-    # gesture.Y_positions=[]
-    # gesture.dir_sequence=[]
-    # gesture.pressure_variation=[]
+    gestures=[]
+    drawgestureframe(lemmas,phrases,meta_datas,POS,gestures)
+    return gestures
+
+
+def drawgestureframe(lemmas,phrases,meta_datas,POS,gestures):
     gesture_X_positions=[]
     gesture_Y_positions=[]
     gesture_dir_sequence=[]
     gesture_pressure_variation=[]
-
-    gesture=[]
+ 
     constituents=[]
     i=0
     skips=0
@@ -22,6 +25,9 @@ def drawSentenceGesture(lemmas,phrases,meta_datas,POS):
         print(i)
         if i>2:
             print('crossing 3 gestemes limit')
+            gestures.append({'X_positions':gesture_X_positions,'Y_positions':gesture_Y_positions,'dir_sequence':gesture_dir_sequence,'pressure_variation':gesture_pressure_variation,'angular_vel':0,'data_density':0})
+            drawgestureframe(lemmas[3:],phrases[3:],meta_datas[3:],POS[3:],gestures)
+            return
 
         print(POS[i])
         constituents.append({'X_positions':[],'Y_positions':[],'dir_sequence':[],'X_constrained':0,'Y_constrained':0,'pressure_variation':[]})
@@ -182,10 +188,9 @@ def drawSentenceGesture(lemmas,phrases,meta_datas,POS):
         gesture_pressure_variation=gesture_pressure_variation+constituents[i]['pressure_variation']
         i=i+1
 
-
-    print(gesture_pressure_variation)
-    print(gesture_X_positions)
-    print(gesture_Y_positions)
-    print(gesture_dir_sequence)
-    gesture={'X_positions':gesture_X_positions,'Y_positions':gesture_Y_positions,'dir_sequence':gesture_dir_sequence,'pressure_variation':gesture_pressure_variation,'angular_vel':0,'data_density':0}
-    return gesture
+    # print(gesture_pressure_variation)
+    # print(gesture_X_positions)
+    # print(gesture_Y_positions)
+    # print(gesture_dir_sequence)
+    gestures.append({'X_positions':gesture_X_positions,'Y_positions':gesture_Y_positions,'dir_sequence':gesture_dir_sequence,'pressure_variation':gesture_pressure_variation,'angular_vel':0,'data_density':0})
+    return gestures

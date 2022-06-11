@@ -11,7 +11,9 @@ app = FastAPI()
 @app.get("/txt2gest/{text}")
 async def readitem(text: str):
     [phrases,lemmas,meta_datas,POS] = parse_doc(text)
-    gesture=drawSentenceGesture(phrases,lemmas,meta_datas,POS)
-    gestureToPlot(gesture)  
-    # POS_string = '-->'.join(map(str, POS))
+    gestures=drawSentenceGesture(phrases,lemmas,meta_datas,POS)
+    print(len(gestures))
+    # for i,gesture in enumerate(gestures):
+    #     gestureToPlot(gesture,i)
+    gestureToPlot(gestures)  
     return FileResponse('plot.png')

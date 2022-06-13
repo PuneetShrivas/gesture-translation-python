@@ -11,22 +11,22 @@ def drawSentenceGesture(lemmas,phrases,meta_datas,POS):
     return gestures
 
 
-def drawgestureframe(lemmas,phrases,meta_datas,POS,gestures):
+def drawgestureframe(lemmas,phrases,meta_datas,POS,gestures,skips=0):
     gesture_X_positions=[]
     gesture_Y_positions=[]
     gesture_dir_sequence=[]
     gesture_pressure_variation=[]
- 
     constituents=[]
     i=0
-    skips=0
     while i < len(lemmas)-skips:
         print("---")
         print(i)
+        print(lemmas)
         if i>2:
-            print('crossing 3 gestemes limit')
             gestures.append({'X_positions':gesture_X_positions,'Y_positions':gesture_Y_positions,'dir_sequence':gesture_dir_sequence,'pressure_variation':gesture_pressure_variation,'angular_vel':0,'data_density':0})
-            drawgestureframe(lemmas[3:],phrases[3:],meta_datas[3:],POS[3:],gestures)
+            # print("gestures before recursive call",gestures)
+            drawgestureframe(lemmas[3:],phrases[3:],meta_datas[3:],POS[3:],gestures,skips)
+            # print("gestures before recursive call",gestures)
             return
 
         print(POS[i])
@@ -90,6 +90,7 @@ def drawgestureframe(lemmas,phrases,meta_datas,POS,gestures):
             if(lemmas[i].lower()=='will'):
                 for j in range(i+1,len(lemmas)):
                     meta_datas[j]={**meta_datas[j],'Tense':['Fut']}
+                print(lemmas)
             
             #fill empty space of modal
             for k in range(i+1,len(lemmas)):

@@ -7,13 +7,10 @@ from txt2gest_fun.docParse import parse_doc
 # Instantiate the class
 app = FastAPI()
 
-# Define a GET method on the specified endpoint
+# Define a GET method on the specified endpoint 
 @app.get("/txt2gest/{text}")
 async def readitem(text: str):
     [phrases,lemmas,meta_datas,POS] = parse_doc(text)
     gestures=drawSentenceGesture(phrases,lemmas,meta_datas,POS)
-    print(len(gestures))
-    # for i,gesture in enumerate(gestures):
-    #     gestureToPlot(gesture,i)
     gestureToPlot(gestures)  
     return FileResponse('plot.png')

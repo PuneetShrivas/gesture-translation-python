@@ -1,5 +1,6 @@
 import os
 from PIL import Image
+import numpy as np
 from matplotlib import patheffects
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
@@ -15,13 +16,17 @@ def gestureToPlot(gestures):
         plt.clf()
         fig, ax = plt.subplots()
         ax.add_collection(lines)
+        # plt.plot(5, 10, marker="o", markersize=20, markeredgecolor="red", markerfacecolor="green")
         plt.axis([1,9,1,21])
         plt.grid(color='grey', linestyle='dotted', linewidth=0.5)
         plt.gca().invert_yaxis()
+        plt.xticks(np.arange(1, 9, 1.0),fontsize=7)
+        plt.yticks(np.arange(1, 21, 1.0),fontsize=7)
         plt.gca().set_aspect('equal')
         filename="{0}{1}.png".format('plot', i)
         filenames.append(filename)
         plt.savefig(filename, bbox_inches='tight')
+        plt.close(fig)
     
     images = [Image.open(x) for x in filenames]
     widths, heights = zip(*(i.size for i in images))

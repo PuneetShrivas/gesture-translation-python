@@ -21,7 +21,6 @@ def drawgestureframe(lemmas,phrases,meta_datas,POS,gestures,skips=0):
     while i < len(lemmas)-skips:
         print("---")
         print(i)
-        print(lemmas)
         if i>2:
             gestures.append({'X_positions':gesture_X_positions,'Y_positions':gesture_Y_positions,'dir_sequence':gesture_dir_sequence,'pressure_variation':gesture_pressure_variation,'angular_vel':0,'data_density':0})
             # print("gestures before recursive call",gestures)
@@ -126,15 +125,27 @@ def drawgestureframe(lemmas,phrases,meta_datas,POS,gestures,skips=0):
                 constituents[i]['X_constrained']=1
                 X_origin_constituent=9
 
-        if(POS[i]=='Punctuation'):
-            print('is punctuation')
-            if phrases[i]=='.':
-                pass
-                # gesture_X_positions.append(gesture_X_positions[-1])
-                # gesture_Y_positions.append(gesture_Y_positions[-1]+1)
-                # gesture_dir_sequence.append(5)
-                # gesture_pressure_variation.append(5)
-            
+        try:
+            if(POS[i+1]=='Punctuation'):
+                print('next is punctuation')
+                last_dir=constituents[i]['dir_sequence'][-1]
+                dirs = [1,2,3,4,5,6,7,8]
+                if phrases[i+1]=='.':
+                    start_dir=np.roll(dirs,3-last_dir)[0]
+                    opp_dir=np.roll(dirs,5-start_dir)[0]
+                    constituents[i]['dir_sequence'] = constituents[i]['dir_sequence'] + [start_dir, opp_dir, opp_dir]
+                elif phrases[i+1]==',':
+                    start_dir=last_dir
+                    opp_dir=np.roll(dirs,5-start_dir)[0]
+                    constituents[i]['dir_sequence'] = constituents[i]['dir_sequence'] + [start_dir, opp_dir]
+                elif phrases[i+1]=='?':
+                    start_dir=np.roll(dirs,3-last_dir)[0]
+                    first_dir=np.roll(dirs,7-start_dir)[0]
+                    sec_dir=np.roll(dirs,7-first_dir)[0]
+                    constituents[i]['dir_sequence'] = constituents[i]['dir_sequence'] + [start_dir, first_dir, sec_dir]
+                skips=skips+1
+        except:
+            print("no punctuations to draw")   
 
         # Generate constituent gesture
         constituents[i]['X_positions'].append(X_origin_constituent)
@@ -177,10 +188,32 @@ def drawgestureframe(lemmas,phrases,meta_datas,POS,gestures,skips=0):
         # Fill gaps values TODO
 
         # Add pressure variation
-        if (POS[i]!='Punctuation'):
-            constituents[i]['pressure_variation'] = np.ones(len(constituents[i]['X_positions']), dtype = int).tolist()
-            constituents[i]['pressure_variation'][-1]=0
-            constituents[i]['pressure_variation']=[x*2+1 for x in constituents[i]['pressure_variation']]
+        constituents[i]['pressure_variation'] = np.ones(len(constituents[i]['X_positions']), dtype = int).tolist()
+
+        pres_len=len(constituents[i]['pressure_variation'])
+        try:
+            if(POS[i+1]=='Punctuation'):
+                if phrases[i+1]=='.':
+                     for iter in range(pres_len-3,pres_len):
+                         constituents[i]['pressure_variation'][iter]=2
+                elif phrases[i+1]==',':
+                    for iter in range(pres_len-2,pres_len):
+                         constituents[i]['pressure_variation'][iter]=2
+                elif phrases[i+1]=='?':
+                    for iter in range(pres_len-4,pres_len):
+                         constituents[i]['pressure_variation'][iter]=2
+                
+                if i<len(lemmas)-skips-1:
+                    for k in range(i+1,len(lemmas)):
+                        lemmas[k-1]=lemmas[k]
+                        phrases[k-1]=phrases[k]
+                        POS[k-1]=POS[k]
+                        meta_datas[k-1]=meta_datas[k]
+        except:
+             print("no punctuations to pressurize")
+        constituents[i]['pressure_variation'][-1]=0
+        constituents[i]['pressure_variation']=[x*2+1 for x in constituents[i]['pressure_variation']]
+
 
         # Add consitituent to overall gesture
         gesture_X_positions=gesture_X_positions+constituents[i]['X_positions']

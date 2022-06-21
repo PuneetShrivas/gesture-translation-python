@@ -4,14 +4,14 @@ import math
 import numpy as np
 
 
-def drawSentenceGesture(lemmas,phrases,meta_datas,POS):
+def drawSentenceGesture(lemmas,phrases,meta_datas,POS,halt):
 
     gestures=[]
-    drawgestureframe(lemmas,phrases,meta_datas,POS,gestures)
+    drawgestureframe(lemmas,phrases,meta_datas,POS,gestures,halt)
     return gestures
 
 
-def drawgestureframe(lemmas,phrases,meta_datas,POS,gestures,skips=0):
+def drawgestureframe(lemmas,phrases,meta_datas,POS,gestures,halt,skips=0):
     gesture_X_positions=[]
     gesture_Y_positions=[]
     gesture_dir_sequence=[]
@@ -21,30 +21,26 @@ def drawgestureframe(lemmas,phrases,meta_datas,POS,gestures,skips=0):
     while i < len(lemmas)-skips:
         print("---")
         print(i)
-        if i>2:
+        if i>1 and max(constituents[i-1]['Y_positions'])>18:
             gestures.append({'X_positions':gesture_X_positions,'Y_positions':gesture_Y_positions,'dir_sequence':gesture_dir_sequence,'pressure_variation':gesture_pressure_variation,'angular_vel':0,'data_density':0})
             # print("gestures before recursive call",gestures)
-            drawgestureframe(lemmas[3:],phrases[3:],meta_datas[3:],POS[3:],gestures,skips)
+            drawgestureframe(lemmas[i:],phrases[i:],meta_datas[i:],POS[i:],gestures,halt,skips)
             # print("gestures before recursive call",gestures)
             return
 
         print(POS[i])
-        constituents.append({'X_positions':[],'Y_positions':[],'dir_sequence':[],'X_constrained':0,'Y_constrained':0,'pressure_variation':[]})
+        constituents.append({'X_positions':[],'Y_positions':[],'dir_sequence':[],'X_constrained':0,'Y_constrained':0,'pressure_variation':[],'halt_after':1})
 
         #Set origin for gesture
-        X_origin_constituent=5
-        Y_origin_constituent=1+(i)*7
         [seq,X_size,Y_size]=lookupSeqFromLemma(phrases[i])
-        # if seq=='':
-        #     del lemmas[i]
-        #     del phrases[i]
-        #     del meta_datas[i]
-        #     del POS[i]
-        #     i=i-1
-        #     continue
         print(lemmas[i])
         X_origin_constituent=5-math.floor(X_size/2)
         Y_origin_constituent=4+(i)*7-math.floor(Y_size/2)
+
+        if i>0:
+            X_origin_constituent=constituents[i-1]['X_positions'][-1]
+            Y_origin_constituent=constituents[i-1]['Y_positions'][-1]
+
         #Generate gesture from dir sequence     
         seq=seq[1::]
         seq = seq[:-1:]
@@ -62,15 +58,16 @@ def drawgestureframe(lemmas,phrases,meta_datas,POS,gestures,skips=0):
         # Add grammatizations
         if(POS[i]=='Verb'):
             print('is verb')
-            if 'Tense' in meta_datas[i] and (meta_datas[i]['Tense'][0]=='Pres'):
+            if 'Tense' in meta_datas[i] and (meta_datas[i]['Tense'][0]=='Fut'):
+                print('and is future tense')
+                constituents[i]['dir_sequence']=[4,4]+constituents[i]['dir_sequence']
+            elif 'Tense' in meta_datas[i] and (meta_datas[i]['Tense'][0]=='Pres'):
                 print('and is present tense')
                 constituents[i]['dir_sequence']=[5,5]+constituents[i]['dir_sequence']
             elif 'Tense' in meta_datas[i] and (meta_datas[i]['Tense'][0]=='Past'):
                 print('and is past tense')
                 constituents[i]['dir_sequence']=[6,6]+constituents[i]['dir_sequence']
-            elif 'Tense' in meta_datas[i] and (meta_datas[i]['Tense'][0]=='Fut'):
-                print('and is future tense')
-                constituents[i]['dir_sequence']=[4,4]+constituents[i]['dir_sequence']
+            
             elif 'Tense' not in meta_datas[i]:
                 print('and is present tense')
                 print("meta datas: ",meta_datas[i])
@@ -108,10 +105,17 @@ def drawgestureframe(lemmas,phrases,meta_datas,POS,gestures,skips=0):
             print('is adjective')
         if(POS[i]=='Pronoun'):
             print('is pronoun')
+            if 'Gender' in meta_datas[i] and (meta_datas[i]['Gender'][0]=='Masc'):
+                print('and is Masculine')
+                constituents[i]['dir_sequence'] = [6,6] + constituents[i]['dir_sequence'] 
+            if 'Gender' in meta_datas[i] and (meta_datas[i]['Gender'][0]=='Fem'):
+                print('and is Masculine')
+                constituents[i]['dir_sequence'] = [5,7,3,3,7] + constituents[i]['dir_sequence'] 
             if 'Number' in meta_datas[i] and (meta_datas[i]['Number'][0]=='Sing'):
                 print('and is Singular')
             if 'Number' in meta_datas[i] and (meta_datas[i]['Number'][0]=='Plur'):
                 print('and is Plural')
+                constituents[i]['dir_sequence'] = constituents[i]['dir_sequence'] + [2,2,5,5]
             if 'Person' in meta_datas[i] and (meta_datas[i]['Person'][0]=='1'):
                 print('and is First Person')
                 constituents[i]['X_constrained']=1
@@ -177,13 +181,20 @@ def drawgestureframe(lemmas,phrases,meta_datas,POS,gestures,skips=0):
                     X_shift=min(shifts)
                 constituents[i]['X_positions']=[k + X_shift for k in constituents[i]['X_positions']]
         
+        #Fix horizontal alignment
+        if max(constituents[i]['X_positions'])>9:
+            X_shift = 9-max(constituents[i]['X_positions'])
+            constituents[i]['X_positions']=[k + X_shift for k in constituents[i]['X_positions']]
+        elif min(constituents[i]['X_positions'])<1:
+            X_shift = 1-min(constituents[i]['X_positions'])
+            constituents[i]['X_positions']=[k + X_shift for k in constituents[i]['X_positions']]
 
-        # Fix vertical alignment
-        Y_shift=0
-        Y_half_size=math.floor((max(constituents[i]['Y_positions'])-min(constituents[i]['Y_positions'])+1)/2)
-        Y_half_position=max(constituents[i]['Y_positions'])-Y_half_size
-        Y_shift=3 + i*7 - Y_half_position
-        constituents[i]['Y_positions']=[k + Y_shift for k in constituents[i]['Y_positions']]
+        # # Fix vertical alignment
+        # Y_shift=0
+        # Y_half_size=math.floor((max(constituents[i]['Y_positions'])-min(constituents[i]['Y_positions'])+1)/2)
+        # Y_half_position=max(constituents[i]['Y_positions'])-Y_half_size
+        # Y_shift=3 + i*7 - Y_half_position
+        # constituents[i]['Y_positions']=[k + Y_shift for k in constituents[i]['Y_positions']]
 
         # Fill gaps values TODO
 
@@ -211,8 +222,17 @@ def drawgestureframe(lemmas,phrases,meta_datas,POS,gestures,skips=0):
                         meta_datas[k-1]=meta_datas[k]
         except:
              print("no punctuations to pressurize")
-        constituents[i]['pressure_variation'][-1]=0
+        # constituents[i]['pressure_variation'][-1]=0
         constituents[i]['pressure_variation']=[x*2+1 for x in constituents[i]['pressure_variation']]
+        
+
+        #Adding a halt after each word
+        if constituents[i]['halt_after']:
+            for x in range(0,halt):
+                constituents[i]['X_positions']=constituents[i]['X_positions'] + [constituents[i]['X_positions'][-1]]
+                constituents[i]['Y_positions']=constituents[i]['Y_positions'] + [constituents[i]['Y_positions'][-1]]
+                constituents[i]['pressure_variation']=constituents[i]['pressure_variation'] + [constituents[i]['pressure_variation'][-1]]
+                # constituents[i]['X_positions']=constituents[i]['X_positions'] + constituents[i]['X_positions'][-1]
 
 
         # Add consitituent to overall gesture
@@ -220,11 +240,14 @@ def drawgestureframe(lemmas,phrases,meta_datas,POS,gestures,skips=0):
         gesture_Y_positions=gesture_Y_positions+constituents[i]['Y_positions']
         gesture_dir_sequence=gesture_dir_sequence+constituents[i]['dir_sequence']
         gesture_pressure_variation=gesture_pressure_variation+constituents[i]['pressure_variation']
+
+        
         i=i+1
 
     # print(gesture_pressure_variation)
     # print(gesture_X_positions)
     # print(gesture_Y_positions)
     # print(gesture_dir_sequence)
+    gesture_pressure_variation = gesture_pressure_variation + [gesture_pressure_variation[-1]]
     gestures.append({'X_positions':gesture_X_positions,'Y_positions':gesture_Y_positions,'dir_sequence':gesture_dir_sequence,'pressure_variation':gesture_pressure_variation,'angular_vel':0,'data_density':0})
     return gestures

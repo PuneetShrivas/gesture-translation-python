@@ -1,7 +1,9 @@
 from nltk import Tree
 from tabulate import tabulate
 import spacy
-nlp = spacy.load("en_core_web_lg")
+from translate import Translator
+translator= Translator(to_lang="en",from_lang='ja')
+nlp_en = spacy.load("en_core_web_lg")
 features = [
     "PronType",
     "Gender",
@@ -83,7 +85,8 @@ def to_nltk_tree(node):
 
 
 def parse_doc(text):
-    doc = nlp(text)
+    # text = str(translator.translate(text))
+    doc = nlp_en(text)
     phrases = []
     meta_datas = []
     lemmas = []
